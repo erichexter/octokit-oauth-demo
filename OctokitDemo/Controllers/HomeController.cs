@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Web.Mvc;
 using System.Web.Security;
+using Microsoft.Ajax.Utilities;
 using Octokit;
 using OctokitDemo.Models;
 
@@ -11,14 +13,14 @@ namespace OctokitDemo.Controllers
     {
         // TODO: Replace the following values with the values from your application registration. Register an
         // application at https://github.com/settings/applications/new to get these values.
-        const string clientId = "106002c37f27482617fb";
-        private const string clientSecret = "66d5263cadd3bfe056dd46147154ba1eb2fe60b8";
+        const string clientId = "64677367ecf4b8ebf20b";
+        private const string clientSecret = "30fff64c9a7688a70ca89538d7016e05802e518a";
         readonly GitHubClient client =
-            new GitHubClient(new ProductHeaderValue("Haack-GitHub-Oauth-Demo"));
+            new GitHubClient(new ProductHeaderValue("Hexter-test-cfd"));
 
         // This URL uses the GitHub API to get a list of the current user's
         // repositories which include public and private repositories.
-        public async Task<ActionResult> Index()
+        public async Task<ActionResult> Index(string organization)
         {
             var accessToken = Session["OAuthToken"] as string;
             if (accessToken != null)
@@ -32,7 +34,16 @@ namespace OctokitDemo.Controllers
             {
                 // The following requests retrieves all of the user's repositories and
                 // requires that the user be logged in to work.
-                var repositories = await client.Repository.GetAllForCurrent();
+
+                IReadOnlyList<Repository> repositories;
+                if(organization.IsNullOrWhiteSpace())
+                    repositories = await client.Repository.GetAllForCurrent();
+                else
+                {
+                    repositories = await client.Repository.GetAllForOrg(organization);
+                }
+
+                
                 var model = new IndexViewModel(repositories);
 
                 return View(model);
@@ -69,9 +80,9 @@ namespace OctokitDemo.Controllers
             Session["CSRF:State"] = csrf;
 
             // 1. Redirect users to request GitHub access
-            var request = new OauthLoginRequest(clientId)
+            var request = new OauthLoginRequest(clientId)            
             {
-                Scopes = {"user", "notifications"},
+                Scopes = { "user", "notifications", "repo" },
                 State = csrf
             };
             var oauthLoginUrl = client.Oauth.GetGitHubLoginUrl(request);
