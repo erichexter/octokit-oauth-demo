@@ -1,47 +1,91 @@
-﻿@model IEnumerable<OctokitDemo.Controllers.CummlativeFlowDiagram>
+﻿@model OctokitDemo.Controllers.CummlativeFlowDiagram
 
 @{
+    Layout = "";
     ViewBag.Title = "Report";
 }
 <link href="~/flot/examples/examples.css" rel="stylesheet" />
-<!--[if lte IE 8]><script language="javascript" type="text/javascript" src="../../excanvas.min.js"></script><![endif]-->
-<script language="javascript" type="text/javascript" src="/flot/jquery.js"></script>
-<script language="javascript" type="text/javascript" src="/flot/jquery.flot.js"></script>
-<script language="javascript" type="text/javascript" src="/flot/jquery.flot.stack.js"></script>
-<script type="text/javascript">
+           
+<script src="~/Scripts/jquery-1.10.2.min.js"></script>
+<!--[if lte IE 8]>
+    <script language="javascript" type="text/javascript" src="/flot/excanvas.min.js"></script>
+<![endif]-->
+<script type="text/javascript" src="/flot/jquery.flot.min.js"></script>
+<script type="text/javascript" src="/flot/jquery.flot.time.js"></script>
+<script type="text/javascript" src="/flot/jquery.flot.stack.js"></script>
+<script type="text/javascript" src="/flot/jquery.flot.symbol.js"></script>
+<script>
 
-    $(function() {
+    @{
 
+        var states = Model.States.ToList();
+        states.Reverse();
+    }
 
-        function plotWithOptions() {
-            $.plot("#placeholder", [ [@Html.Raw(Model.Select(a => (a.Period.Ticks / (long)10000) + "," + a.Backlog.ToString()).Aggregate((a, b) => a + "," + b))],  [@Html.Raw(Model.Select(a => (a.Period.Ticks / 10000) + "," + a.Closed.ToString()).Aggregate((a, b) => a + "," + b))] ], {
-                series: {
-                    stack: true,
-                    lines: {
-                        show: true,
-                        fill: true,
-                        steps: false
-                    },
-                    bars: {
-                        show: false,
-                        barWidth: 0.6
-                    },
-                    xaxis: {
-                        mode: "time",
-                        timeformat: "%Y/%m/%d"
-                    }
-                }
-            });
+    function gd(year, month, day) {
+        return new Date(year, month - 1, day).getTime();
+    }
+
+    var dataset = [
+        @foreach (var item in states)
+        {
+            <text>{
+                label:'@item',
+                data: [
+                @Model.Items.Select(a => "[gd(" + a.Period.Year + "," + a.Period.Month + "," + a.Period.Day + ")," + a.Phases.Single(b => b.Name == item).Count + "]").Aggregate((a, b) => a + "," + b) ],
+           },
+           </text>
         }
+    ];
 
-        plotWithOptions();
+    var options = {
+        series: {
+            stack: true,
+            lines: {
+                show: true,
+                fill: true
+            }
+        },
+        xaxis: {
+            mode: "time",
+            tickSize: [3, "day"],
+            tickLength: 10,
+            color: "black",
+            axisLabel: "Date",
+            axisLabelUseCanvas: true,
+            axisLabelFontSizePixels: 12,
+            axisLabelFontFamily: 'Verdana, Arial',
+            axisLabelPadding: 10
+        },
+        yaxis: {
+            color: "black",
+            axisLabel: "Issue Count",
+            axisLabelUseCanvas: true,
+            axisLabelFontSizePixels: 12,
+            axisLabelFontFamily: 'Verdana, Arial',
+            axisLabelPadding: 3,
+            tickFormatter: function(v, axis) {
+                return v;
+            }
+        },
+        grid: {
+            hoverable: true,
+            borderWidth: 2,
+            backgroundColor: {
+                colors: ["#EDF5FF", "#ffffff"]
+            }
+        }
+    };
 
+    $(document).ready(function() {
+        $.plot($("#placeholder"), dataset, options);
+
+        //$("#placeholder").UseTooltip();
     });
+    </script>
 
-</script>
+    <h2>Cumulative Flow Diagram</h2>
 
-<h2>Report</h2>
-
-<div class="demo-container">
-    <div id="placeholder" class="demo-placeholder"></div>
-</div>
+    <div class="demo-container">
+        <div id="placeholder" class="demo-placeholder"></div>
+    </div>
