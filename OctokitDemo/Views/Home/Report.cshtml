@@ -1,0 +1,47 @@
+﻿@model IEnumerable<OctokitDemo.Controllers.CummlativeFlowDiagram>
+
+@{
+    ViewBag.Title = "Report";
+}
+<link href="~/flot/examples/examples.css" rel="stylesheet" />
+<!--[if lte IE 8]><script language="javascript" type="text/javascript" src="../../excanvas.min.js"></script><![endif]-->
+<script language="javascript" type="text/javascript" src="/flot/jquery.js"></script>
+<script language="javascript" type="text/javascript" src="/flot/jquery.flot.js"></script>
+<script language="javascript" type="text/javascript" src="/flot/jquery.flot.stack.js"></script>
+<script type="text/javascript">
+
+    $(function() {
+
+
+        function plotWithOptions() {
+            $.plot("#placeholder", [ [@Html.Raw(Model.Select(a => (a.Period.Ticks / (long)10000) + "," + a.Backlog.ToString()).Aggregate((a, b) => a + "," + b))],  [@Html.Raw(Model.Select(a => (a.Period.Ticks / 10000) + "," + a.Closed.ToString()).Aggregate((a, b) => a + "," + b))] ], {
+                series: {
+                    stack: true,
+                    lines: {
+                        show: true,
+                        fill: true,
+                        steps: false
+                    },
+                    bars: {
+                        show: false,
+                        barWidth: 0.6
+                    },
+                    xaxis: {
+                        mode: "time",
+                        timeformat: "%Y/%m/%d"
+                    }
+                }
+            });
+        }
+
+        plotWithOptions();
+
+    });
+
+</script>
+
+<h2>Report</h2>
+
+<div class="demo-container">
+    <div id="placeholder" class="demo-placeholder"></div>
+</div>
