@@ -13,9 +13,9 @@ namespace OctokitDemo.Controllers
         public async Task<CummlativeFlowDiagram> Create(GitHubClient client, string user, string repository)
         {
 
-            
-            
-            var statusLabes = new List<string> { "trackduck", "req:business", "req:ui", "req:tech", "ready", "in progress", "testing" };
+
+
+            var statusLabes = new List<string> { "backlog", "waffle:ready", "waffle:in progress", "waffle:needs review" };
 
             try
             {
