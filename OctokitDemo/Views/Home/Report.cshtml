@@ -74,8 +74,8 @@
             backgroundColor: {
                 colors: ["#EDF5FF", "#ffffff"]
             }
-        }
-    };
+        },
+        legend: { show: true, position: 'nw' , sorted: "reverse",noColumns:20}};
 
     $(document).ready(function() {
         $.plot($("#placeholder"), dataset, options);
@@ -84,8 +84,10 @@
     });
     </script>
 
-    <h2>Cumulative Flow Diagram</h2>
+<h3>Cumulative Flow Diagram @Model.Title</h3>
 
-    <div class="demo-container">
-        <div id="placeholder" class="demo-placeholder"></div>
-    </div>
+<div class="demo-container">
+
+    <div id="placeholder" class="demo-placeholder"></div>
+    <div id="legendholder"></div>
+</div>

@@ -15,8 +15,8 @@ namespace OctokitDemo.Controllers
 
 
 
-            var statusLabes = new List<string> { "backlog", "waffle:ready", "waffle:in progress", "waffle:needs review" };
-
+            var labels = new List<string> { "backlog", "waffle:ready", "waffle:in progress", "waffle:needs review" };
+            DateTime? startDate = null;
             try
             {
                 var contents = await client.Repository.Content.GetContents(user, repository, "cfd.json");
@@ -26,7 +26,8 @@ namespace OctokitDemo.Controllers
                     var jsonstring = contents.First().Content;
                     dynamic data = JObject.Parse(jsonstring);
 
-                    statusLabes = data.items.ToObject<List<string>>();
+                    labels = data.items.ToObject<List<string>>();
+                    startDate = data.startDate;
                 }
             }
             catch (Exception)
@@ -70,12 +71,13 @@ namespace OctokitDemo.Controllers
 
 
             var report = new List<CummlativeFlowDiagramItem>();
-            var min = issues.Min(a => a.CreatedDate);
+            if(!startDate.HasValue)
+            startDate = issues.Min(a => a.CreatedDate).Date;
             var grouped = issues.GroupBy(a => a.CreatedDate.UtcDateTime.Date).Select(a => new { a.Key, Count = a.Count(), Issues = a.ToList() }).OrderBy(a => a.Key);
             
-            for (int i = 0; i < (DateTime.Now - min).Days; i++)
+            for (int i = 0; i < (DateTime.Now - startDate.Value).Days; i++)
             {
-                var today = min.AddDays(i).Date;
+                var today = startDate.Value.AddDays(i).Date;
 
                 var activeIssues = grouped.Where(a => a.Key <= today).SelectMany(a => a.Issues);
                 var total = activeIssues.Count();
@@ -88,8 +90,8 @@ namespace OctokitDemo.Controllers
                             Issue = a,
                             Label =
                                 a.Events.OrderByDescending(b => b.CreatedAt)
-                                    .FirstOrDefault(b => statusLabes.Contains(b.Label.Name.ToString())) != null ? a.Events.OrderByDescending(b => b.CreatedAt)
-                                        .FirstOrDefault(b => statusLabes.Contains(b.Label.Name.ToString())).Label.Name : "backlog"
+                                    .FirstOrDefault(b => labels.Contains(b.Label.Name.ToString())) != null ? a.Events.OrderByDescending(b => b.CreatedAt)
+                                        .FirstOrDefault(b => labels.Contains(b.Label.Name.ToString())).Label.Name : "backlog"
 
                         }).GroupBy(a => a.Label).Select(a => new { Label = a.Key, Count = a.Count() });
 
@@ -100,7 +102,7 @@ namespace OctokitDemo.Controllers
                 };
 
                 item.Phases.Add(new Phase() { Name = "Backlog", Count = states.Where(a => a.Label == "backlog").Sum(a => a.Count) });
-                foreach (var phase in statusLabes)
+                foreach (var phase in labels)
                 {
                     item.Phases.Add(new Phase() { Name = phase, Count = states.Where(a => a.Label == phase).Sum(a => a.Count) });
                 }                
@@ -109,7 +111,7 @@ namespace OctokitDemo.Controllers
 
             }
 
-            var cumlativeFlowDiagram = new CummlativeFlowDiagram {States=statusLabes.ToList(),Items = report.Where(a => a.Total > 10).ToList()};
+            var cumlativeFlowDiagram = new CummlativeFlowDiagram {States=labels.ToList(),Items = report.ToList()};
             cumlativeFlowDiagram.States.Insert(0,"Backlog");
             cumlativeFlowDiagram.States.Add("Closed");
             return cumlativeFlowDiagram;

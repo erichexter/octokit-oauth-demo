@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Mvc;
@@ -48,7 +49,7 @@ namespace OctokitDemo.Controllers
                 
                 
                 
-                var model = new IndexViewModel(repositories);
+                var model = new IndexViewModel(repositories.Where(a=>a.OpenIssuesCount>0).OrderByDescending(a=>a.OpenIssuesCount));
 
                 return View(model);
             }
@@ -82,6 +83,7 @@ namespace OctokitDemo.Controllers
             {
                 var report = new Cfd();
                 model = await report.Create(client, organization, repository);
+                model.Title = organization + "/" + repository;
                 Session[organization + ":" + repository] = model;
             }
 

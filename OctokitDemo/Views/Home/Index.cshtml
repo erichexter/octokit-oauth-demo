@@ -8,7 +8,7 @@
     <h1>My Repositories</h1>
     <ul>
         @foreach (var repository in Model.Repositories) {
-            <li><a href="/home/report?organization=@repository.Owner.Login&repository=@repository.Name">@repository.FullName</a></li>
+            <li><a href="/home/report?organization=@repository.Owner.Login&repository=@repository.Name">@repository.FullName (@repository.OpenIssuesCount)</a></li>
         }
     </ul>
 </div>

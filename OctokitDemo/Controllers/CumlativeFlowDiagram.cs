@@ -6,5 +6,6 @@ namespace OctokitDemo.Controllers
     {
         public List<CummlativeFlowDiagramItem> Items { get; set; }
         public List<string> States { get; set; }
+        public string Title { get; set; }
     }
 }
