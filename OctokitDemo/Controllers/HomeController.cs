@@ -15,10 +15,9 @@ namespace OctokitDemo.Controllers
     {
         // TODO: Replace the following values with the values from your application registration. Register an
         // application at https://github.com/settings/applications/new to get these values.
-        const string clientId = "64677367ecf4b8ebf20b";
-        private const string clientSecret = "30fff64c9a7688a70ca89538d7016e05802e518a";
-        readonly GitHubClient client =
-            new GitHubClient(new ProductHeaderValue("Hexter-test-cfd"));
+        //const string clientId = "64677367ecf4b8ebf20b";
+        //private const string clientSecret = "30fff64c9a7688a70ca89538d7016e05802e518a";
+        readonly GitHubClient client =new GitHubClient(new ProductHeaderValue("Hexter-test-cfd"));
 
         // This URL uses the GitHub API to get a list of the current user's
         // repositories which include public and private repositories.
@@ -62,7 +61,7 @@ namespace OctokitDemo.Controllers
             }
         }
 
-        public async  Task<ViewResult> Report(string organization,string repository)        
+        public async Task<ActionResult> Report(string organization, string repository)        
         {
 
             var accessToken = Session["OAuthToken"] as string;
@@ -70,9 +69,10 @@ namespace OctokitDemo.Controllers
             {
                 // This allows the client to make requests to the GitHub API on the user's behalf
                 // without ever having the user's OAuth credentials.
-                client.Credentials = new Credentials(accessToken);
+                client.Credentials = new Credentials(accessToken);            
             }
-            
+            else
+                return Redirect(GetOauthLoginUrl());
             
             CummlativeFlowDiagram  model;
             if (Session[organization + ":" + repository] != null)
@@ -92,6 +92,7 @@ namespace OctokitDemo.Controllers
         // This is the Callback URL that the GitHub OAuth Login page will redirect back to.
         public async Task<ActionResult> Authorize(string code, string state)
         {
+            var settings = System.Configuration.ConfigurationManager.AppSettings;
             if (!String.IsNullOrEmpty(code))
             {
                 var expectedState = Session["CSRF:State"] as string;
@@ -99,7 +100,7 @@ namespace OctokitDemo.Controllers
                 Session["CSRF:State"] = null;
 
                 var token = await client.Oauth.CreateAccessToken(
-                    new OauthTokenRequest(clientId, clientSecret, code));
+                    new OauthTokenRequest( settings["github.clientId"], settings["github.clientSecret"], code));
                 Session["OAuthToken"] = token.AccessToken;
             }
 
@@ -108,11 +109,12 @@ namespace OctokitDemo.Controllers
 
         private string GetOauthLoginUrl()
         {
+            var settings = System.Configuration.ConfigurationManager.AppSettings;
             string csrf = Membership.GeneratePassword(24, 1);
             Session["CSRF:State"] = csrf;
 
             // 1. Redirect users to request GitHub access
-            var request = new OauthLoginRequest(clientId)            
+            var request = new OauthLoginRequest(settings["github.clientId"])  
             {
                 Scopes = { "user", "notifications", "repo" },
                 State = csrf

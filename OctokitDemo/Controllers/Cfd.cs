@@ -40,7 +40,8 @@ namespace OctokitDemo.Controllers
             var issues = new List<Issue>();
             
 
-            IReadOnlyList<Octokit.Issue> response = client.Issue.GetForRepository(user, repository, new RepositoryIssueRequest() { State = ItemState.All }).Result;
+            IReadOnlyList<Octokit.Issue> response = await client.Issue.GetForRepository(user, repository, new RepositoryIssueRequest() { State = ItemState.All });
+            IReadOnlyList<Octokit.IssueEvent> events = await client.Issue.Events.GetForRepository(user, repository);
 
             foreach (Octokit.Issue issue in response)            
             {
@@ -56,11 +57,8 @@ namespace OctokitDemo.Controllers
                         Body = issue.Body,
                         CreatedDate = issue.CreatedAt.ToUniversalTime(),
                         ClosedDate = issue.ClosedAt,
-                        Events =
-                            client.Issue.Events.GetForIssue(user, repository, issue.Number)
-                                .Result.Where(
-                                    a => a.Event == EventInfoState.Labeled || a.Event == EventInfoState.Unlabeled)
-                                .ToList()
+                        Events = events.Where(a=> a.Issue.Number==issue.Number && (a.Event== EventInfoState.Labeled || a.Event== EventInfoState.Unlabeled)).ToList()
+                            //client.Issue.Events.GetForIssue(user, repository, issue.Number).Result.Where(a => a.Event == EventInfoState.Labeled || a.Event == EventInfoState.Unlabeled).ToList()
                     };
                     issues.Add(i);
                 }
@@ -110,6 +108,7 @@ namespace OctokitDemo.Controllers
                 report.Add(item);
 
             }
+            report = report.Where(a => a.Period.DayOfWeek != DayOfWeek.Saturday && a.Period.DayOfWeek != DayOfWeek.Sunday).ToList();
 
             var cumlativeFlowDiagram = new CummlativeFlowDiagram {States=labels.ToList(),Items = report.ToList()};
             cumlativeFlowDiagram.States.Insert(0,"Backlog");

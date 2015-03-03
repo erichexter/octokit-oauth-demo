@@ -22,6 +22,6 @@ namespace OctokitDemo.Controllers
         public string Body { get; set; }
         public DateTimeOffset? ClosedDate { get; set; }
         public DateTimeOffset CreatedDate { get; set; }
-        public IList<EventInfo> Events { get; set; }
+        public List<IssueEvent> Events { get; set; }
     }
 }
