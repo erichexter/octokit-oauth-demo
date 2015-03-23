@@ -61,6 +61,48 @@ namespace OctokitDemo.Controllers
             }
         }
 
+        public async Task<ActionResult> WorkInProcessReport(string organization, string repository)
+        {
+
+            var accessToken = Session["OAuthToken"] as string;
+            if (accessToken != null)
+            {
+                // This allows the client to make requests to the GitHub API on the user's behalf
+                // without ever having the user's OAuth credentials.
+                client.Credentials = new Credentials(accessToken);
+            }
+            else
+                return Redirect(GetOauthLoginUrl());
+
+            CummlativeFlowDiagram model;
+            if (Session[organization + ":" + repository] != null)
+            {
+                model = (CummlativeFlowDiagram)Session[organization + ":" + repository];
+            }
+            else
+            {
+                var report = new CumulativeFlowDiagramReport();
+                model = await report.Create(client, organization, repository);
+                model.Title = organization + "/" + repository;
+                Session[organization + ":" + repository] = model;
+            }
+
+            model.States.Clear();
+            model.States.Add("WIP");
+            model.Items=model.Items.Select(a =>
+                new CummlativeFlowDiagramItem()
+                {
+                Period    = a.Period,
+                Total = 0,
+                Phases = new List<Phase>(new Phase[]{new Phase()
+                {
+                    Name="WIP",
+                    Count = a.Phases.Where(b=>b.Name!="Closed" && b.Name!="Backlog").Sum(b=>b.Count)
+                }, })}).ToList();
+                
+            return View("Report",model);
+        }
+
         public async Task<ActionResult> Report(string organization, string repository)        
         {
 
@@ -81,7 +123,7 @@ namespace OctokitDemo.Controllers
             }
             else
             {
-                var report = new Cfd();
+                var report = new CumulativeFlowDiagramReport();
                 model = await report.Create(client, organization, repository);
                 model.Title = organization + "/" + repository;
                 Session[organization + ":" + repository] = model;

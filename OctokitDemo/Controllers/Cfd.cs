@@ -8,15 +8,15 @@ using Octokit;
 
 namespace OctokitDemo.Controllers
 {
-    public class Cfd
+    public class CumulativeFlowDiagramReport
     {
         public async Task<CummlativeFlowDiagram> Create(GitHubClient client, string user, string repository)
         {
 
+            DateTime? startDate = null;
 
 
             var labels = new List<string> { "backlog", "waffle:ready", "waffle:in progress", "waffle:needs review" };
-            DateTime? startDate = null;
             try
             {
                 var contents = await client.Repository.Content.GetContents(user, repository, "cfd.json");
