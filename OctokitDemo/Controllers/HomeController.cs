@@ -38,15 +38,8 @@ namespace OctokitDemo.Controllers
 
                 List<Repository> repositories=new List<Repository>();
 
-                repositories.AddRange( await client.Repository.GetAllForCurrent() );
-
-                    foreach (var org in await client.Organization.GetAllForCurrent())
-                    {
-                        repositories.AddRange( await client.Repository.GetAllForOrg(org.Login));
-                    }
-
-                
-                
+                repositories.AddRange( await client.Repository.GetAllForCurrent().ConfigureAwait(false) );
+                               
                 
                 var model = new IndexViewModel(repositories.Where(a=>a.OpenIssuesCount>0).OrderByDescending(a=>a.OpenIssuesCount));
 
@@ -124,7 +117,7 @@ namespace OctokitDemo.Controllers
             else
             {
                 var report = new CumulativeFlowDiagramReport();
-                model = await report.Create(client, organization, repository);
+                model = await report.Create(client, organization, repository).ConfigureAwait(false);
                 model.Title = organization + "/" + repository;
                 Session[organization + ":" + repository] = model;
             }
